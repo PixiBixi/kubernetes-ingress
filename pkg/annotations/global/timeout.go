@@ -24,6 +24,11 @@ func (a *Timeout) GetName() string {
 }
 
 func (a *Timeout) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Defaults-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Defaults custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	var timeout *int64
 	var err error

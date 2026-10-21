@@ -8,6 +8,7 @@ import (
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 //nolint:stylecheck
@@ -31,6 +32,11 @@ func (a *Cookie) GetName() string {
 }
 
 func (a *Cookie) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) || common.IsSet(a.nameNoDynamic, annotations...) {
+		utils.Once("deprecation-Backend-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Backend custom resource instead", a.name)
+		})
+	}
 	// Cookie dynamic annotation ?
 	input := common.GetValue(a.GetName(), annotations...)
 	params := strings.Fields(input)

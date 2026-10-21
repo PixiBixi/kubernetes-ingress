@@ -47,7 +47,9 @@ func (s *Service) HandleHAProxySrvs(k8s store.K8s, client api.HAProxyClient) {
 	backend.Name = s.backend.Name // set backendName in store.PortEndpoints for runtime updates.
 	for _, name := range []string{"scale-server-slots", "server-slots", "servers-increment"} {
 		if annotations.String(name, s.annotations...) != "" {
-			logger.Warningf("backend '%s': annotation [%s] is DEPRECATED and ignored, servers are added through the runtime API", s.backend.Name, name)
+			utils.Once("deprecation-"+name, func() {
+				logger.Warningf("DEPRECATED: backend '%s': annotation [%s] is ignored, servers are added through the runtime API", s.backend.Name, name)
+			})
 		}
 	}
 	// scale servers

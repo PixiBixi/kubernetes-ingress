@@ -16,6 +16,16 @@ func GetValue(annotationName string, annotations ...map[string]string) string {
 	return DefaultValues[annotationName]
 }
 
+// IsSet reports whether the annotation is explicitly present, ignoring DefaultValues.
+func IsSet(name string, annotations ...map[string]string) bool {
+	for _, a := range annotations {
+		if _, ok := a[name]; ok {
+			return true
+		}
+	}
+	return false
+}
+
 // GetMatch returns all matches of the annotation prefix name in the provided annotations.
 func GetMatch(annotationPrefix string, annotations ...map[string]string) map[string]string {
 	result := map[string]string{}

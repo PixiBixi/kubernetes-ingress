@@ -16,7 +16,9 @@ package ingress
 
 import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 // SSLPassthroughEnabled reports whether the traffic of an ingress path is served in
@@ -47,5 +49,10 @@ func SSLPassthroughEnabled(k store.K8s, path *store.IngressPath, ingressAnnotati
 		scopes = append(scopes, svc.Annotations)
 	}
 	scopes = append(scopes, ingressAnnotations, k.ConfigMaps.Main.Annotations)
+	if common.IsSet("ssl-passthrough", scopes...) {
+		utils.Once("deprecation-ssl-passthrough", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "ssl-passthrough")
+		})
+	}
 	return annotations.Bool("ssl-passthrough", scopes...)
 }

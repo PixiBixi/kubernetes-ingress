@@ -7,6 +7,7 @@ import (
 
 	"github.com/haproxytech/client-native/v6/models"
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/instance"
 	"github.com/haproxytech/kubernetes-ingress/pkg/service"
@@ -34,6 +35,11 @@ func (handler TCPServices) Update(k store.K8s, h haproxy.HAProxy, a annotations.
 	}
 	handler.clearFrontends(k, h)
 	var p tcpSvcParser
+	if common.IsSet("log-format-tcp", k.ConfigMaps.TCPServices.Annotations) {
+		utils.Once("deprecation-log-format-tcp", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "log-format-tcp")
+		})
+	}
 	logFormat := k.ConfigMaps.TCPServices.Annotations["log-format-tcp"]
 
 	for port, tcpSvcAnn := range k.ConfigMaps.TCPServices.Annotations {

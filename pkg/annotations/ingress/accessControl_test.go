@@ -15,6 +15,12 @@
 package ingress
 
 import (
+	"bytes"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,6 +31,32 @@ import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/rules"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
 )
+
+// The once-keys are process-global and tests reuse the process: fresh names per invocation.
+var accessControlSeq atomic.Int64
+
+func TestAccessControlDeprecationNotices(t *testing.T) {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	t.Cleanup(func() { log.SetOutput(os.Stderr) })
+
+	// The current name gets the generic removal notice, once.
+	denyListName := fmt.Sprintf("deny-list-%d", accessControlSeq.Add(1))
+	ann := NewDenyList(denyListName, &rules.List{}, newRecordingMaps())
+	require.NoError(t, ann.Process(store.K8s{}, map[string]string{denyListName: "192.168.1.1"}))
+	require.Contains(t, buf.String(), fmt.Sprintf("DEPRECATED: annotation %q will be removed", denyListName))
+	require.Equal(t, 1, strings.Count(buf.String(), "DEPRECATED"), "warning must be logged once per app run")
+
+	// The deprecated alias warns about the rename only: its fallback must not
+	// also mark the new name as used and double-notice the same user.
+	buf.Reset()
+	aliasName := fmt.Sprintf("deny-list-%d", accessControlSeq.Add(1))
+	rulesList := &rules.List{}
+	ann = NewDenyList(aliasName, rulesList, newRecordingMaps())
+	require.NoError(t, ann.Process(store.K8s{}, map[string]string{"blacklist": "192.168.1.1"}))
+	require.Len(t, *rulesList, 1, "the deprecated alias must keep working")
+	require.NotContains(t, buf.String(), fmt.Sprintf("annotation %q will be removed", aliasName))
+}
 
 // recordingMaps implements maps.Maps and records appended rows so tests can
 // assert exactly which addresses end up in the access-control map file.

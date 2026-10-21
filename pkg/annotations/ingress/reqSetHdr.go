@@ -7,6 +7,7 @@ import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/rules"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type SetHdr struct {
@@ -28,6 +29,11 @@ func (a *SetHdr) GetName() string {
 }
 
 func (a *SetHdr) Process(k store.K8s, annotations ...map[string]string) (err error) {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	if input == "" {
 		return err

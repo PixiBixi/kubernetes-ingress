@@ -22,6 +22,7 @@ import (
 	"github.com/haproxytech/client-native/v6/models"
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/controller/constants"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/certs"
@@ -100,6 +101,11 @@ func (handler *HTTPS) handleClientTLSAuth(k store.K8s, h haproxy.HAProxy) (err e
 	// Parsing
 	var caFile string
 	var notFound store.ErrNotFound
+	if common.IsSet("client-ca", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-client-ca", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "client-ca")
+		})
+	}
 	secret, annErr := annotations.Secret("client-ca", "", k, k.ConfigMaps.Main.Annotations)
 	if annErr != nil {
 		if !errors.Is(annErr, notFound) {
@@ -123,6 +129,11 @@ func (handler *HTTPS) handleClientTLSAuth(k store.K8s, h haproxy.HAProxy) (err e
 
 	var enabled bool
 	verify := "required"
+	if common.IsSet("client-crt-optional", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-client-crt-optional", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "client-crt-optional")
+		})
+	}
 	enabled, annErr = annotations.Bool("client-crt-optional", k.ConfigMaps.Main.Annotations)
 	logger.Error(annErr)
 	if enabled {
@@ -183,14 +194,29 @@ func (handler *HTTPS) Update(k store.K8s, h haproxy.HAProxy, a annotations.Annot
 	}
 
 	// Fetch tls-alpn value for when SSL offloading is enabled
+	if common.IsSet("tls-alpn", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-tls-alpn", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "tls-alpn")
+		})
+	}
 	handler.alpn = a.String("tls-alpn", k.ConfigMaps.Main.Annotations)
 
+	if common.IsSet("client-strict-sni", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-client-strict-sni", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "client-strict-sni")
+		})
+	}
 	handler.strictSNI, err = annotations.Bool("client-strict-sni", k.ConfigMaps.Main.Annotations)
 	logger.Error(err)
 
 	// Handle generate-certificates-signer secret
 	handler.generateCertificatesSigner = ""
 	var notFound store.ErrNotFound
+	if common.IsSet("generate-certificates-signer", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-generate-certificates-signer", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "generate-certificates-signer")
+		})
+	}
 	secret, annErr := annotations.Secret("generate-certificates-signer", "", k, k.ConfigMaps.Main.Annotations)
 	if annErr != nil {
 		if !errors.Is(annErr, notFound) {

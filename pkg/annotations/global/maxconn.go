@@ -7,6 +7,7 @@ import (
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type Maxconn struct {
@@ -23,6 +24,11 @@ func (a *Maxconn) GetName() string {
 }
 
 func (a *Maxconn) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Global-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Global custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	perfOptions := models.PerformanceOptions{}
 	if input == "" {

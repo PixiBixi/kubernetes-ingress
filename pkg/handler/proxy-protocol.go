@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/maps"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/rules"
@@ -30,6 +31,11 @@ type ProxyProtocol struct{}
 
 func (handler ProxyProtocol) Update(k store.K8s, h haproxy.HAProxy, a annotations.Annotations) (err error) {
 	//  Get annotation status
+	if common.IsSet("proxy-protocol", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-proxy-protocol", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "proxy-protocol")
+		})
+	}
 	annProxyProtocol := a.String("proxy-protocol", k.ConfigMaps.Main.Annotations)
 	if annProxyProtocol == "" {
 		return nil

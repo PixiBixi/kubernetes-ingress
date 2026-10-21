@@ -107,6 +107,11 @@ func (q *Quic) Update(k store.K8s, h haproxy.HAProxy, a annotations.Annotations)
 		instance.ReloadIf(errFrontendBindDelete == nil, "quic binding v6 removed")
 	}
 
+	if common.IsSet("quic-alt-svc-max-age", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-quic-alt-svc-max-age", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "quic-alt-svc-max-age")
+		})
+	}
 	maxAge := common.GetValue("quic-alt-svc-max-age", k.ConfigMaps.Main.Annotations)
 	updatedMaxAge := maxAge != q.MaxAge
 	if updatedMaxAge {

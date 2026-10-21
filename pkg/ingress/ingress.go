@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/certs"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/rules"
@@ -25,6 +26,7 @@ import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/secret"
 	"github.com/haproxytech/kubernetes-ingress/pkg/service"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -153,6 +155,11 @@ func (i *Ingress) handlePath(k store.K8s, h haproxy.HAProxy, host string, path *
 		SSLPassthrough: sslPassthrough,
 	}
 
+	if common.IsSet("route-acl", svc.GetResource().Annotations) {
+		utils.Once("deprecation-route-acl", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "route-acl")
+		})
+	}
 	routeACLAnn := a.String("route-acl", svc.GetResource().Annotations)
 	if routeACLAnn == "" {
 		i.reportRouteKeyCollisions(k, ingRoute)

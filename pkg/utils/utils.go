@@ -109,12 +109,14 @@ func GetBoolValue(dataValue, dataName string) (result bool, err error) {
 	if err != nil {
 		switch strings.ToLower(dataValue) {
 		case "enabled", "on":
-			logger := GetLogger()
-			logger.Warningf(`%s - [%s] is DEPRECATED, use "true" or "false"`, dataName, dataValue)
+			Once("deprecated bool value "+dataName+"="+dataValue, func() {
+				GetLogger().Warningf(`DEPRECATED: %s value [%s], use "true" or "false"`, dataName, dataValue)
+			})
 			result = true
 		case "disabled", "off":
-			logger := GetLogger()
-			logger.Warningf(`%s - [%s] is DEPRECATED, use "true" or "false"`, dataName, dataValue)
+			Once("deprecated bool value "+dataName+"="+dataValue, func() {
+				GetLogger().Warningf(`DEPRECATED: %s value [%s], use "true" or "false"`, dataName, dataValue)
+			})
 			result = false
 		default:
 			return false, err

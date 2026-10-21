@@ -6,9 +6,11 @@ import (
 	"sync"
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	k8ssync "github.com/haproxytech/kubernetes-ingress/pkg/k8s/sync"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type PrometheusEndpoint struct {
@@ -57,6 +59,11 @@ func (handler PrometheusEndpoint) Update(k store.K8s, h haproxy.HAProxy, a annot
 		return nil
 	}
 
+	if common.IsSet("prometheus-endpoint-auth-secret", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-prometheus-endpoint-auth-secret", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "prometheus-endpoint-auth-secret")
+		})
+	}
 	annSecret := annotations.String("prometheus-endpoint-auth-secret", k.ConfigMaps.Main.Annotations)
 	prometheusMu.RLock()
 	prometheusUsersActiveLocal := prometheusUsersActive

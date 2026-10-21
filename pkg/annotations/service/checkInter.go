@@ -22,6 +22,11 @@ func (a *CheckInter) GetName() string {
 }
 
 func (a *CheckInter) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Backend-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Backend custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	if input == "" {
 		if a.backend.DefaultServer != nil {

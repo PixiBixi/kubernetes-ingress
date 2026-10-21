@@ -40,6 +40,11 @@ func (a *AccessControl) GetName() string {
 }
 
 func (a *AccessControl) Process(k store.K8s, annotations ...map[string]string) (err error) {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", a.name)
+		})
+	}
 	input := a.GetAnnotationValue(annotations...)
 	if input == "" {
 		return err
@@ -96,7 +101,9 @@ func (a *AccessControl) GetAnnotationValue(annotations ...map[string]string) str
 	if value == "" { // fallback to deprecated annotation name
 		value = common.GetValue(a.deprecatedName, annotations...)
 		if value != "" {
-			logger.Warningf("annotation %q is deprecated and will be removed in a future version. Please use %q instead.", a.deprecatedName, a.name)
+			utils.Once("deprecation-"+a.deprecatedName, func() {
+				logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use %q instead", a.deprecatedName, a.name)
+			})
 		}
 	}
 	return value

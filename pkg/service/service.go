@@ -23,6 +23,7 @@ import (
 
 	v3 "github.com/haproxytech/kubernetes-ingress/crs/api/ingress/v3"
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	serviceann "github.com/haproxytech/kubernetes-ingress/pkg/annotations/service"
 	"github.com/haproxytech/kubernetes-ingress/pkg/controller/constants"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
@@ -75,6 +76,11 @@ func New(k store.K8s, path *store.IngressPath, certs certs.Certificates, tcpServ
 	a := make([]map[string]string, 1, 3)
 	a[0] = service.Annotations
 	a = append(a, annList...)
+	if common.IsSet("standalone-backend", a...) {
+		utils.Once("deprecation-standalone-backend", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "standalone-backend")
+		})
+	}
 	var standalone bool
 	for _, anns := range a {
 		standalone = len(anns) != 0 && anns["standalone-backend"] == "true"

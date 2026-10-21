@@ -10,6 +10,7 @@ import (
 
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type LoadBalance struct {
@@ -26,6 +27,11 @@ func (a *LoadBalance) GetName() string {
 }
 
 func (a *LoadBalance) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Backend-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Backend custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	if input == "" {
 		a.backend.Balance = nil

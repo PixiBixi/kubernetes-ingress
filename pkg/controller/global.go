@@ -266,6 +266,11 @@ func (c *HAProxyController) handleDefaultLocalService() {
 
 // handleDefaultCert configures default/fallback HAProxy certificate to use for client HTTPS requests.
 func (c *HAProxyController) handleDefaultCert() {
+	if common.IsSet("ssl-certificate", c.store.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-ssl-certificate", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "ssl-certificate")
+		})
+	}
 	secret, err := annotations.Secret("ssl-certificate", c.podNamespace, c.store, c.store.ConfigMaps.Main.Annotations)
 	if err != nil {
 		logger.Errorf("default certificate: %s", err)

@@ -43,7 +43,9 @@ func (a *HTTPConnectionMode) processAlternativeAnnotations(httpConnectionMode st
 			logger.Error(err.Error())
 			continue
 		}
-		logger.Warningf("annotation [%s] is DEPRECATED, use [http-connection-mode: \"%s\"] instead", annotation, annotation)
+		utils.Once("deprecation-"+annotation, func() {
+			logger.Warningf("DEPRECATED: annotation [%s], use [http-connection-mode: \"%s\"] instead", annotation, annotation)
+		})
 		if enabled {
 			mode = annotation
 		}
@@ -56,6 +58,11 @@ func (a *HTTPConnectionMode) processAlternativeAnnotations(httpConnectionMode st
 }
 
 func (a *HTTPConnectionMode) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Defaults-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Defaults custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 
 	// this block can be removed when annotations `http-server-close` and `http-keep-alive` become obsolete

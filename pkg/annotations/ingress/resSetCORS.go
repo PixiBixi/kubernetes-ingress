@@ -42,6 +42,11 @@ func (a ResSetCORSAnn) GetName() string {
 }
 
 func (a ResSetCORSAnn) Process(k store.K8s, annotations ...map[string]string) (err error) {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	if input == "" {
 		return nil

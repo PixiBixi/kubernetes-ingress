@@ -6,6 +6,7 @@ import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy/certs"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type CA struct {
@@ -27,6 +28,11 @@ func (a *CA) GetName() string {
 }
 
 func (a *CA) Process(k store.K8s, annotations ...map[string]string) error {
+	if common.IsSet(a.name, annotations...) {
+		utils.Once("deprecation-Backend-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", a.name)
+		})
+	}
 	var secret *store.Secret
 	var caFile string
 	ns, name, err := common.GetK8sPath(a.name, annotations...)

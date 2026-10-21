@@ -16,13 +16,20 @@ package handler
 
 import (
 	"github.com/haproxytech/kubernetes-ingress/pkg/annotations"
+	"github.com/haproxytech/kubernetes-ingress/pkg/annotations/common"
 	"github.com/haproxytech/kubernetes-ingress/pkg/haproxy"
 	"github.com/haproxytech/kubernetes-ingress/pkg/store"
+	"github.com/haproxytech/kubernetes-ingress/pkg/utils"
 )
 
 type Refresh struct{}
 
 func (handler Refresh) Update(k store.K8s, h haproxy.HAProxy, a annotations.Annotations) (err error) {
+	if common.IsSet("clean-certs", k.ConfigMaps.Main.Annotations) {
+		utils.Once("deprecation-clean-certs", func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version", "clean-certs")
+		})
+	}
 	cleanCrts := true
 	cleanCrtsAnn, _ := annotations.ParseBool("clean-certs", k.ConfigMaps.Main.Annotations)
 	// cleanCrtsAnn is empty if clean-certs not set or set with a non boolean value =>  error

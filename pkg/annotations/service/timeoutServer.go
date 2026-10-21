@@ -22,6 +22,12 @@ func (a *TimeoutServer) GetName() string {
 }
 
 func (a *TimeoutServer) Process(k store.K8s, annotations ...map[string]string) error {
+	// shortcut: the ConfigMap is always the last map; the Defaults notice owns its scope
+	if len(annotations) > 1 && common.IsSet(a.name, annotations[:len(annotations)-1]...) {
+		utils.Once("deprecation-Backend-"+a.name, func() {
+			logger.Warningf("DEPRECATED: annotation %q will be removed in a future version, use the Backend custom resource instead", a.name)
+		})
+	}
 	input := common.GetValue(a.GetName(), annotations...)
 	if input == "" {
 		a.backend.ServerTimeout = nil
