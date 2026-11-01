@@ -1865,7 +1865,7 @@ generate-certificates-signer: "default/ca-signing-cert"
 
   :information_source: Mount the file from a Secret. The controller ignores a path it cannot read, since HAProxy would refuse the configuration.
 
-  :information_source: A rotated file is read on the next reload, and the keys kept from the previous file keep the tickets already issued valid.
+  :information_source: The controller watches the file and pushes a rotated key through the runtime API (set ssl tls-key), without a reload. It reloads only when the runtime update fails. The keys kept from the previous file keep the tickets already issued valid.
 
 Possible values:
 

@@ -902,7 +902,7 @@ annotations:
       - The file holds base64 encoded keys, one per line (80 bytes each for AES-256 tickets), at least three. HAProxy encrypts with the second to last key and decrypts with the last three, so a rotation drops the first line and appends a new key.
     tip:
       - Mount the file from a Secret. The controller ignores a path it cannot read, since HAProxy would refuse the configuration.
-      - A rotated file is read on the next reload, and the keys kept from the previous file keep the tickets already issued valid.
+      - The controller watches the file and pushes a rotated key through the runtime API (set ssl tls-key), without a reload. It reloads only when the runtime update fails. The keys kept from the previous file keep the tickets already issued valid.
     values:
       - Absolute path of the keys file inside the controller container
     applies_to:
